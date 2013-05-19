@@ -1,4 +1,4 @@
-import socket,string
+import socket,string,random
 
 SERVER='leguin.freenode.net' #The server we want to connect to 
 PORT=6667 #The connection port which is usually 6667 
@@ -17,7 +17,7 @@ def irc_conn():
 #simple function to send data through the socket
 def send_data(command):
     s.send(command + '\n')
-	
+    
 #join the channel
 def join(channel):
     send_data("JOIN %s" % channel)
@@ -26,13 +26,18 @@ def join(channel):
 def login(nick, username='gardenbot', password = None, realname='gardenbot', hostname='testhostname', servername='whatevenisthis'):
     send_data("USER %s %s %s %s" % (username, hostname, servername, realname))
     send_data("NICK " + nick)
-	
+def sendmsg(msg,target):
+    send_data('PRIVMSG '+target+' '+msg)
+def roll(sender,msg,target):
+    sendmsg(str(random.randint(1,6)),CHANNEL)
+commands= {
+    ":!roll": roll
+}
 irc_conn()
 login(NICK)
 join(CHANNEL)
 
 while 1:
-
     buffer = s.recv(1024)
     msg = string.split(buffer)
     if msg[0] == "PING": #check if server have sent ping command
@@ -43,10 +48,14 @@ while 1:
         message = ' '.join(msg[3:])
         filetxt.write(string.lstrip(nick_name, ':') + ' -> ' + string.lstrip(message, ':') + '\n') #write to the file
         filetxt.flush() #don't wait for next message, write it now!
-
-
+    if msg [1] == 'PRIVMSG' and msg[2] == CHANNEL:
+        if msg[3] in commands:
+            commands[msg[3]](msg[0],buffer,msg[2])
+    else:
+        print buffer
 		
 		
+
 		
 #Everything below this is leftover from Zeffy's splatcode. I'm too lazy to rewrite it, since Kedama probably knows more than I do about python.
 
