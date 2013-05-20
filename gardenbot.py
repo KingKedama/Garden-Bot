@@ -28,6 +28,8 @@ def login(nick, username='gardenbot', password = None, realname='gardenbot', hos
     send_data("NICK " + nick)
 def sendmsg(msg,target):
     send_data('PRIVMSG '+target+' :'+msg)
+def sendaction(msg,target):
+	send_data('PRIVMSG '+target+' :\x01ACTION '+msg+'\x01')
 def roll(sender,msg,target):
     split=string.split(msg.lower())
     if len(split) < 2:
@@ -63,9 +65,14 @@ def convostarter(sender,msg,target):
         sendmsg('The server couldn\'t fulfill the request.  Error code: '+e.code,target)
     except urllib2.URLError, e:
         sendmsg('Failed to reach a server:  '+e.reason,target)
+		
+def snuggles(sender,msg,target):
+	sendaction('snuggles %s' % sender,target)
+
 commands= {
     ":!roll": roll,
-    ":!convo": convostarter
+    ":!convo": convostarter,
+    ":!snuggle": snuggles
 }
 help= {
     "roll": "",
