@@ -60,7 +60,7 @@ def convostarter(sender,msg,target):
         res=urllib2.urlopen(req)
         sendmsg('What do you think of '+res.geturl()+' ?',target)
     except urllib2.HTTPError, e:
-        sendmsg('The server couldn\'t fulfill the request.  Error code: 'e.code,target)
+        sendmsg('The server couldn\'t fulfill the request.  Error code: '+e.code,target)
     except urllib2.URLError, e:
         sendmsg('Failed to reach a server:  '+e.reason,target)
 commands= {
@@ -73,7 +73,7 @@ help= {
 }
 
 def helpcommand(sender,msg,target):
-
+    return
 irc_conn()
 login(NICK)
 join(CHANNEL)
