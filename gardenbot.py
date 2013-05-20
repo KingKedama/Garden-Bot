@@ -1,4 +1,4 @@
-import socket,string,random
+import socket,string,random,urllib2
 
 SERVER='leguin.freenode.net' #The server we want to connect to 
 PORT=6667 #The connection port which is usually 6667 
@@ -27,12 +27,53 @@ def login(nick, username='gardenbot', password = None, realname='gardenbot', hos
     send_data("USER %s %s %s %s" % (username, hostname, servername, realname))
     send_data("NICK " + nick)
 def sendmsg(msg,target):
-    send_data('PRIVMSG '+target+' '+msg)
+    send_data('PRIVMSG '+target+' :'+msg)
 def roll(sender,msg,target):
-    sendmsg(str(random.randint(1,6)),CHANNEL)
+    split=string.split(msg.lower())
+    if len(split) < 2:
+        sendmsg('invalid syntax.',target)
+        return
+    ret=""
+    for dice in split[1:]:
+        num = string.split(dice,"d")
+        if len(num) != 2:
+            sendmsg("invalid syntax.",target)
+            return
+        try:
+            amount=int(num[0])
+            size=int(num[1])
+            ret+=dice+'['
+            for x in range(0,amount):
+                ret+=str(random.randint(1,size))
+                if x != amount -1:
+                    ret+=','
+            ret+='] '
+        except exceptions.ValueError:
+            sendmsg("invalid syntax.",target)
+            return 
+    sendmsg(ret,target)
+
+def convostarter(sender,msg,target):
+    try:
+        req=urllib2.Request('http://en.wikipedia.org/wiki/Special:Random')
+        req.add_header('User-Agent',"Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11")
+        res=urllib2.urlopen(req)
+        sendmsg('What do you think of '+res.geturl()+' ?',target)
+    except urllib2.HTTPError, e:
+        sendmsg('The server couldn\'t fulfill the request.  Error code: 'e.code,target)
+    except urllib2.URLError, e:
+        sendmsg('Failed to reach a server:  '+e.reason,target)
 commands= {
-    ":!roll": roll
+    ":!roll": roll,
+    ":!convo": convostarter
 }
+help= {
+    "roll": "",
+    "convo": "gives a link to a random wikipedia page"
+}
+
+def helpcommand(sender,msg,target):
+
 irc_conn()
 login(NICK)
 join(CHANNEL)
@@ -43,14 +84,12 @@ while 1:
     if msg[0] == "PING": #check if server have sent ping command
         send_data("PONG %s" % msg[1]) #answer with pong as per RFC 1459
     if msg [1] == 'PRIVMSG' and msg[2] == NICK:
-        filetxt = open('./test/msg.txt', 'a+') #open an arbitrary file to store the messages
-        nick_name = msg[0][:string.find(msg[0],"!")] #if a private message is sent to you catch it
-        message = ' '.join(msg[3:])
-        filetxt.write(string.lstrip(nick_name, ':') + ' -> ' + string.lstrip(message, ':') + '\n') #write to the file
-        filetxt.flush() #don't wait for next message, write it now!
+        if 'dkzxcvnveieruv' in msg[3]: #makes the bot shut down, usefull while debugging, may take it out
+            exit(0)
     if msg [1] == 'PRIVMSG' and msg[2] == CHANNEL:
-        if msg[3] in commands:
-            commands[msg[3]](msg[0],buffer,msg[2])
+        if msg[3].lower() in commands:
+            input = buffer[buffer.find(" :")+2:]
+            commands[msg[3].lower()](msg[0],input,msg[2])
     else:
         print buffer
 		
