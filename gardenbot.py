@@ -67,7 +67,12 @@ def convostarter(sender,msg,target):
         sendmsg('Failed to reach a server:  '+e.reason,target)
 		
 def snuggles(sender,msg,target):
-	sendaction('snuggles %s' % sender,target)
+	if len(msg.split()) == 2: #There is a better way to do this, I know it. But it works for now.
+		sendaction('snuggles %s lovingly.' % msg.split()[1],target)
+	else:
+		sendernickcolon = sender.split("!", 1)[0]
+		sendernick = sendernickcolon.strip(':')
+		sendaction('snuggles %s lovingly.' % sendernick,target)
 
 commands= {
     ":!roll": roll,
