@@ -39,7 +39,6 @@ class GardenBot:
         
         if server:
             c.execute('''INSERT OR REPLACE INTO settings (key,value) VALUES("server",?)''',(server,))
-            conn.commit()
             self.server=server
         else:
             c.execute('SELECT value FROM settings WHERE key="server"')
@@ -51,7 +50,6 @@ class GardenBot:
                 sys.exit(1)
         if port:
             c.execute('''INSERT OR REPLACE INTO settings (key,value) VALUES("port",?)''',(port,))
-            conn.commit()
             self.server=server
         else:
             c.execute('SELECT value FROM settings WHERE key="port"')
@@ -62,7 +60,6 @@ class GardenBot:
                 self.port=6667
         if nick:
             c.execute('''INSERT OR REPLACE INTO settings (key,value) VALUES("nick",?)''',(nick,))
-            conn.commit()
             self.nick=nick
         else:
             c.execute('SELECT value FROM settings WHERE key="nick"')
@@ -74,7 +71,6 @@ class GardenBot:
                 sys.exit(1)
         if realname:
             c.execute('''INSERT OR REPLACE INTO settings (key,value) VALUES("realname",?)''',(realname,))
-            conn.commit()
             self.realname=realname
         else:
             c.execute('SELECT value FROM settings WHERE key="realname"')
@@ -85,7 +81,6 @@ class GardenBot:
                 self.realname='gardenbot'
         if channel:
             c.execute('''INSERT OR REPLACE INTO settings (key,value) VALUES("channel",?)''',(channel,))
-            conn.commit()
             self.channel=channel
         else:
             c.execute('SELECT value FROM settings WHERE key="channel"')
@@ -97,7 +92,6 @@ class GardenBot:
                 sys.exit(1)
         if password:
             c.execute('''INSERT OR REPLACE INTO settings (key,value) VALUES("password",?)''',(password,))
-            conn.commit()
             self.password=password
         else:
             c.execute('SELECT value FROM settings WHERE key="password"')
@@ -106,6 +100,7 @@ class GardenBot:
                 self.password=tmp[0]
             else:
                 self.password=None
+        conn.commit()
         
     def start(self):
         self.irc_conn()
