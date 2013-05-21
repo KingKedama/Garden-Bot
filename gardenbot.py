@@ -1,5 +1,6 @@
 import socket,string,sys,sqlite3,getopt,Queue
 from cmdProcessor import * 
+from sendProcessor import *
 
 def main(argv):
     try:
@@ -104,43 +105,40 @@ class GardenBot:
         self.sendlock = thread.allocate_lock() 
         
     def start(self):
+        self.outqueue=Queue.PriorityQueue()
+        sender=SendProcessor(self.outqueue,self.s)
         self.irc_conn()
         self.login(self.nick,password=self.password,realname=self.realname)
-        self.join(self.channel)
+        
         msgqueue=Queue.Queue()
-        outqueue=Queue.Queue()
-        processor=CmdProcessor(msgqueue,outqueue,self)
+        
+        processor=CmdProcessor(msgqueue,self.outqueue,self)
         while 1:
             buffer = self.s.recv(1024)
+            print buffer
             msg = string.split(buffer)
             if msg[0] == "PING": #check if server have sent ping command
-                self.send_data("PONG %s" % msg[1]) #answer with pong as per RFC 1459
+                self.send_data("PONG %s" % msg[1],0) #answer with pong as per RFC 1459
+            if msg[1]=="NOTICE" and 'Found your hostname' in buffer:
+                self.join(self.channel)
             elif msg [1] == 'PRIVMSG':
                 msgqueue.put(buffer)
-            else:
-                print buffer
-            try:
-                data=outqueue.get(block=false)
-                print data
-                self.send_data(data)
-                outqueue.task_done()
-            except:
-                pass
+            
     def irc_conn(self):
         self.s.connect((self.server, self.port))
 
     #simple function to send data through the socket
-    def send_data(self,command):
-        self.s.send(command + '\n')
+    def send_data(self,command,priority=1000):
+        self.outqueue.put((priority,command + '\n'))
         
     #join the channel
     def join(self,channel):
-        self.send_data("JOIN %s" % channel)
+        self.send_data("JOIN %s" % channel,2)
     
     #send login data (customizable)
     def login(self,nick, username='gardenbot', password = None, realname='gardenbot', hostname='testhostname', servername='whatevenisthis'):
-        self.send_data("USER %s %s %s %s" % (username, hostname, servername, realname))
-        self.send_data("NICK " + nick)
+        self.send_data("USER %s %s %s %s" % (username, hostname, servername, realname),0)
+        self.send_data("NICK " + nick,1)
     def sendmsg(msg,target):
         self.send_data('PRIVMSG '+target+' :'+msg)
     def sendaction(msg,target):
