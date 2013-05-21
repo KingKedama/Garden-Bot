@@ -1,5 +1,5 @@
-import socket,string,sys,sqlite3,getopt
-
+import socket,string,sys,sqlite3,getopt,Queue
+from cmdProcessor import * 
 
 def main(argv):
     try:
@@ -101,16 +101,31 @@ class GardenBot:
             else:
                 self.password=None
         conn.commit()
+        self.sendlock = thread.allocate_lock() 
         
     def start(self):
         self.irc_conn()
         self.login(self.nick,password=self.password,realname=self.realname)
         self.join(self.channel)
+        msgqueue=Queue.Queue()
+        outqueue=Queue.Queue()
+        processor=CmdProcessor(msgqueue,outqueue,self)
         while 1:
             buffer = self.s.recv(1024)
             msg = string.split(buffer)
             if msg[0] == "PING": #check if server have sent ping command
-                send_data("PONG %s" % msg[1]) #answer with pong as per RFC 1459
+                self.send_data("PONG %s" % msg[1]) #answer with pong as per RFC 1459
+            elif msg [1] == 'PRIVMSG':
+                msgqueue.put(buffer)
+            else:
+                print buffer
+            try:
+                data=outqueue.get(block=false)
+                print data
+                self.send_data(data)
+                outqueue.task_done()
+            except:
+                pass
     def irc_conn(self):
         self.s.connect((self.server, self.port))
 
