@@ -22,8 +22,7 @@ class CmdProcessor:
             if msg [1] == 'PRIVMSG' and msg[2] == self.nick:
                 print 'pm'
             elif msg [1] == 'PRIVMSG' and msg[2] == self.channel:
-                sendernickcolon = msg[0].split("!", 1)[0]
-                sendernick = sendernickcolon.strip(':')
+                self.countline(self.getnick(msg[0]),mess)
             self.inqueue.task_done()
             
             
@@ -33,3 +32,23 @@ class CmdProcessor:
         self.outqueue.put((priority,'PRIVMSG '+target+' :'+msg))
     def sendaction(self,msg,target,priority=1000):
         self.outqueue.put((priority,'PRIVMSG '+target+' :\x01ACTION '+msg+'\x01'))
+        
+    def getnick(self, hostnick):
+        sendernickcolon = hostnick.split("!", 1)[0]
+        return sendernickcolon.strip(':')
+    def countline(self,nick,mess):
+        column='messages'
+        if ':\x01ACTION' in mess:
+                column='actions'
+        conn= sqlite3.connect(self.database)
+        c=conn.cursor()
+        c.execute('SELECT * FROM users WHERE nick=?',(nick,))
+        result= c.fetchone()
+        if result:
+            c.execute('UPDATE users SET '+column +' = '+column+' + 1 WHERE nick=?',(nick,))
+        else:
+            c.execute('INSERT INTO users (nick,'+column+') VALUES(?,1)',(nick,))     
+        conn.commit()
+        conn.close()
+        
+        
