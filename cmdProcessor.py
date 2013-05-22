@@ -1,6 +1,7 @@
 import Queue,string,thread,sqlite3
 from roll import * #TODO make this dynamic
 from convoStarter import *
+from snuggle import *
 class CmdProcessor:
 
     def __init__(self, inqueue,outqueue,bot):
@@ -21,7 +22,8 @@ class CmdProcessor:
         commands[c.getname()]=c
         c=ConvoStarter(self,self.database)
         commands[c.getname()]=c
-        
+        c=Snuggle(self,self.database)
+        commands[c.getname()]=c
         while 1:
             mess=self.inqueue.get()
             msg = string.split(mess)
