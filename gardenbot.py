@@ -125,12 +125,13 @@ class GardenBot:
             buffer = self.s.recv(1024)
             print buffer
             msg = string.split(buffer)
-            if msg[0] == "PING": #check if server have sent ping command
-                self.send_data("PONG %s" % msg[1],0) #answer with pong as per RFC 1459
-            if msg[1]=="NOTICE" and 'Found your hostname' in buffer:
-                self.join(self.channel)
-            elif msg [1] == 'PRIVMSG':
-                msgqueue.put(buffer)
+            if len(msg) >0:
+                if msg[0] == "PING": #check if server have sent ping command
+                    self.send_data("PONG %s" % msg[1],0) #answer with pong as per RFC 1459
+                if msg[1]=="NOTICE" and 'Found your hostname' in buffer:
+                    self.join(self.channel)
+                elif msg [1] == 'PRIVMSG':
+                    msgqueue.put(buffer)
             
     def irc_conn(self):
         self.s.connect((self.server, self.port))
