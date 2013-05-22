@@ -1,5 +1,5 @@
 import Queue,string,thread,sqlite3
-
+from roll import * #TODO make this dynamic
 class CmdProcessor:
 
     def __init__(self, inqueue,outqueue,bot):
@@ -15,7 +15,10 @@ class CmdProcessor:
     
     
     def run(self):
-        #TODO set up command list
+        commands={}
+        c=DiceRoller(self,self.database)
+        commands[c.getname()]=c
+        
         while 1:
             mess=self.inqueue.get()
             msg = string.split(mess)
@@ -23,6 +26,8 @@ class CmdProcessor:
                 print 'pm'
             elif msg [1] == 'PRIVMSG' and msg[2] == self.channel:
                 self.countline(self.getnick(msg[0]),mess)
+                if ":!" in msg[3] and msg[3][2:].lower() in commands:
+                    commands[msg[3][2:].lower()].run(msg[0],mess[mess.find(" :")+2:],msg[2])
             self.inqueue.task_done()
             
             
@@ -50,5 +55,4 @@ class CmdProcessor:
             c.execute('INSERT INTO users (nick,'+column+') VALUES(?,1)',(nick,))     
         conn.commit()
         conn.close()
-        
-        
+    
