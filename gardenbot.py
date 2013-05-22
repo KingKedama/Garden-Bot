@@ -36,6 +36,11 @@ class GardenBot:
                      key text,
                      value text,
                      PRIMARY KEY (key))''')
+        c.execute('''CREATE TABLE IF NOT EXISTS users(
+                     id INTEGER,
+                     nick TEXT,
+                     messages INTEGER,
+                     PRIMARY KEY (id))''')
         conn.commit()
         
         if server:

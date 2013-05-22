@@ -19,7 +19,9 @@ class CmdProcessor:
             if msg [1] == 'PRIVMSG' and msg[2] == self.bot.nick:
                 self.sendmsg('recieved pm',self.bot.channel)
             elif msg [1] == 'PRIVMSG' and msg[2] == self.bot.channel:
-                self.sendmsg('saw message in channel',self.bot.channel)
+                sendernickcolon = msg[0].split("!", 1)[0]
+                sendernick = sendernickcolon.strip(':')
+                self.sendmsg('%s sent that message.' % sendernick,self.bot.channel)
             self.inqueue.task_done()
             
             
