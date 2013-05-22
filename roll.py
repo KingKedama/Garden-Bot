@@ -20,7 +20,7 @@ class DiceRoller(Command):
                 amount=int(num[0])
                 size=int(num[1])
                 if size < 1:
-                    self.cmdprocessor.sendmsg("Die size must be possitive",target)
+                    self.cmdprocessor.sendmsg("Die size must be an integer >0",target)
                     return
                 ret+=dice+'['
                 for x in range(0,amount):

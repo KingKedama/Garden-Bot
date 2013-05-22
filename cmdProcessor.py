@@ -1,5 +1,6 @@
 import Queue,string,thread,sqlite3
 from roll import * #TODO make this dynamic
+from convoStarter import *
 class CmdProcessor:
 
     def __init__(self, inqueue,outqueue,bot):
@@ -18,6 +19,8 @@ class CmdProcessor:
         commands={}
         c=DiceRoller(self,self.database)
         commands[c.getname()]=c
+        c=ConvoStarter(self,self.database)
+        commands[c.getname()]=c
         
         while 1:
             mess=self.inqueue.get()
@@ -26,7 +29,7 @@ class CmdProcessor:
                 print 'pm'
             elif msg [1] == 'PRIVMSG' and msg[2] == self.channel:
                 self.countline(self.getnick(msg[0]),mess)
-                if ":!" in msg[3] and msg[3][2:].lower() in commands:
+                if msg[3][:2] == ":!"  and msg[3][2:].lower() in commands:
                     commands[msg[3][2:].lower()].run(msg[0],mess[mess.find(" :")+2:],msg[2])
             self.inqueue.task_done()
             
