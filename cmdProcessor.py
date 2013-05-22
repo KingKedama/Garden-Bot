@@ -1,4 +1,4 @@
-import Queue,string,thread
+import Queue,string,thread,sqlite3
 
 class CmdProcessor:
 
@@ -6,7 +6,10 @@ class CmdProcessor:
         
         self.inqueue=inqueue
         self.outqueue=outqueue
-        self.bot=bot
+        self.database=bot.database
+        self.nick=bot.nick
+        self.channel=bot.channel
+        
         thread.start_new(self.run,())
         
     
@@ -16,12 +19,11 @@ class CmdProcessor:
         while 1:
             mess=self.inqueue.get()
             msg = string.split(mess)
-            if msg [1] == 'PRIVMSG' and msg[2] == self.bot.nick:
-                self.sendmsg('recieved pm',self.bot.channel)
-            elif msg [1] == 'PRIVMSG' and msg[2] == self.bot.channel:
+            if msg [1] == 'PRIVMSG' and msg[2] == self.nick:
+                print 'pm'
+            elif msg [1] == 'PRIVMSG' and msg[2] == self.channel:
                 sendernickcolon = msg[0].split("!", 1)[0]
                 sendernick = sendernickcolon.strip(':')
-                self.sendmsg('%s sent that message.' % sendernick,self.bot.channel)
             self.inqueue.task_done()
             
             

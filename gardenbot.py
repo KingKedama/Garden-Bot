@@ -4,7 +4,7 @@ from sendProcessor import *
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv,"hs:p:n:r:c:p:",["server=","port=","nick=","realname=","channel=","password="])
+        opts, args = getopt.getopt(argv,"hs:p:n:r:c:p:d:",["server=","port=","nick=","realname=","channel=","password=","database="])
     except getopt.GetoptError:
         sys.exit(1) #TODO print syntax
     kwargs={}
@@ -22,7 +22,9 @@ def main(argv):
         elif opt in ("-c","--channel"):
             kwargs['channel']=arg
         elif opt in ("-p","--password"):
-            kwargs['password']=arg    
+            kwargs['password']=arg
+        elif opt in ("-d","--database"):
+            kwargs['database']=arg
     bot= GardenBot(**kwargs)
     bot.start()
 class GardenBot:
@@ -30,7 +32,7 @@ class GardenBot:
     def __init__(self,database='data.db',server=None,port=None,nick=None,realname=None,channel=None,password=None):
         self.s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         conn= sqlite3.connect(database)
-        self.database=conn
+        self.database=database
         c=conn.cursor()
         c.execute('''CREATE TABLE IF NOT EXISTS settings(
                      key text,
@@ -107,7 +109,7 @@ class GardenBot:
             else:
                 self.password=None
         conn.commit()
-        self.sendlock = thread.allocate_lock() 
+        conn.close()
         
     def start(self):
         self.outqueue=Queue.PriorityQueue()
