@@ -1,7 +1,5 @@
-import Queue,string,thread,sqlite3
-from roll import * #TODO make this dynamic
-from convoStarter import *
-from snuggle import *
+import Queue,string,thread,sqlite3,os,imp
+
 class CmdProcessor:
 
     def __init__(self, inqueue,outqueue,bot):
@@ -17,13 +15,11 @@ class CmdProcessor:
     
     
     def run(self):
-        commands={}
-        c=DiceRoller(self,self.database)
-        commands[c.getname()]=c
-        c=ConvoStarter(self,self.database)
-        commands[c.getname()]=c
-        c=Snuggle(self,self.database)
-        commands[c.getname()]=c
+        self.commands={}
+        self.add_command('roll','DiceRoller')#TODO get commands to load from database
+        self.add_command('snuggle','Snuggle')
+        self.add_command('convoStarter','ConvoStarter')
+        
         while 1:
             mess=self.inqueue.get()
             msg = string.split(mess)
@@ -31,8 +27,8 @@ class CmdProcessor:
                 print 'pm'
             elif msg [1] == 'PRIVMSG' and msg[2] == self.channel:
                 self.countline(self.getnick(msg[0]),mess)
-                if msg[3][:2] == ":!"  and msg[3][2:].lower() in commands:
-                    commands[msg[3][2:].lower()].run(msg[0],mess[mess.find(" :")+2:],msg[2])
+                if msg[3][:2] == ":!"  and msg[3][2:].lower() in self.commands:
+                    self.commands[msg[3][2:].lower()].run(msg[0],mess[mess.find(" :")+2:],msg[2])
             self.inqueue.task_done()
             
             
@@ -60,4 +56,16 @@ class CmdProcessor:
             c.execute('INSERT INTO users (nick,'+column+') VALUES(?,1)',(nick,))     
         conn.commit()
         conn.close()
+        
+    def add_command(self,filename,classname):
+        c=self.load_class_from_file(filename,classname,(self,self.database))
+        if c:
+            self.commands[c.getname()]=c
+    def load_class_from_file(self,name,expected_class,args):
+        class_inst = None
+        py_mod=__import__(name)
+        if hasattr(py_mod, expected_class):
+            expected_class=getattr(py_mod,expected_class)
+        class_inst =expected_class(*args) 
+        return class_inst
     
