@@ -19,6 +19,7 @@ class CmdProcessor:
         self.add_command('roll','DiceRoller')#TODO get commands to load from database
         self.add_command('snuggle','Snuggle')
         self.add_command('convoStarter','ConvoStarter')
+        self.add_command('linecount','ShowLineCount')
         
         while 1:
             mess=self.inqueue.get()
