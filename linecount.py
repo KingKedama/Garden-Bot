@@ -12,7 +12,10 @@ class ShowLineCount(Command):
             c=conn.cursor()
             c.execute('SELECT messages FROM users WHERE nick=?',(nick,))
             result= c.fetchone()
-            self.cmdprocessor.sendmsg('%s has sent %s lines so far.' % (nick,result[0]),target)
+            if result != None:
+                self.cmdprocessor.sendmsg('%s has sent %s lines so far.' % (nick,result[0]),target)
+            else:
+                self.cmdprocessor.sendmsg('%s is not in the database. Did you type the name correctly? Case sensitive.' % (nick),target)
         else:
             conn= sqlite3.connect(self.database)
             c=conn.cursor()

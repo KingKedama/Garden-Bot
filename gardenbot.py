@@ -129,6 +129,8 @@ class GardenBot:
                 if msg[0] == "PING": #check if server have sent ping command
                     self.send_data("PONG %s" % msg[1],0) #answer with pong as per RFC 1459
                 if msg[1]=="NOTICE" and 'Found your hostname' in buffer:
+                    tmp = 'identify %s' % self.password
+                    processor.sendmsg(tmp,'NickServ')
                     self.join(self.channel)
                 elif msg [1] == 'PRIVMSG':
                     msgqueue.put(buffer)
@@ -148,10 +150,6 @@ class GardenBot:
     def login(self,nick, username='gardenbot', password = None, realname='gardenbot', hostname='testhostname', servername='whatevenisthis'):
         self.send_data("USER %s %s %s %s" % (username, hostname, servername, realname),0)
         self.send_data("NICK " + nick,1)
-    def sendmsg(msg,target):
-        self.send_data('PRIVMSG '+target+' :'+msg)
-    def sendaction(msg,target):
-        self.send_data('PRIVMSG '+target+' :\x01ACTION '+msg+'\x01')
         
 
 if __name__ == "__main__":
