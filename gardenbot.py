@@ -129,8 +129,9 @@ class GardenBot:
                 if msg[0] == "PING": #check if server have sent ping command
                     self.send_data("PONG %s" % msg[1],0) #answer with pong as per RFC 1459
                 if msg[1]=="NOTICE" and 'Found your hostname' in buffer:
-                    tmp = 'identify %s' % self.password
-                    processor.sendmsg(tmp,'NickServ')
+                    if self.password:
+                        tmp = 'identify %s' % self.password
+                        processor.sendmsg(tmp,'NickServ')
                     self.join(self.channel)
                 elif msg [1] == 'PRIVMSG':
                     msgqueue.put(buffer)

@@ -25,11 +25,14 @@ class CmdProcessor:
             mess=self.inqueue.get()
             msg = string.split(mess)
             if msg [1] == 'PRIVMSG' and msg[2] == self.nick:
-                print 'pm'
+                if msg[3][:2] == ":!"  and msg[3][2:].lower() in self.commands:
+                    if self.commands[msg[3][2:].lower()].pm:
+                        self.commands[msg[3][2:].lower()].run(msg[0],mess[mess.find(" :")+2:],getnick(msg[0]))
             elif msg [1] == 'PRIVMSG' and msg[2] == self.channel:
                 self.countline(self.getnick(msg[0]),mess)
                 if msg[3][:2] == ":!"  and msg[3][2:].lower() in self.commands:
-                    self.commands[msg[3][2:].lower()].run(msg[0],mess[mess.find(" :")+2:],msg[2])
+                    if self.commands[msg[3][2:].lower()].channel:
+                        self.commands[msg[3][2:].lower()].run(msg[0],mess[mess.find(" :")+2:],msg[2])
             self.inqueue.task_done()
             
             
@@ -45,6 +48,7 @@ class CmdProcessor:
         return sendernickcolon.strip(':')
     def countline(self,nick,mess):
         column='messages'
+        nick=nick.lower()
         if ':\x01ACTION' in mess:
                 column='actions'
         conn= sqlite3.connect(self.database)
