@@ -1,4 +1,5 @@
 import Queue,string,thread,sqlite3,os,imp
+from command import *
 
 class CmdProcessor:
 
@@ -17,8 +18,8 @@ class CmdProcessor:
     def run(self):
         self.commands={}
         self.add_command('roll','DiceRoller')#TODO get commands to load from database
-        self.add_command('snuggle','Snuggle')
-        self.add_command('convoStarter','ConvoStarter')
+        self.add_command('snuggle.py','Snuggle')
+        self.add_command('convoStarter.py','ConvoStarter')
         self.add_command('linecount','ShowLineCount')
         self.add_command('actioncount','ShowActionCount')
         self.priority=1
@@ -69,13 +70,22 @@ class CmdProcessor:
         
     def add_command(self,filename,classname):
         c=self.load_class_from_file(filename,classname,(self,self.database))
-        if c:
+        if c and isinstance(c,Command):
             self.commands[c.getname()]=c
     def load_class_from_file(self,name,expected_class,args):
         class_inst = None
-        py_mod=__import__(name)
-        if hasattr(py_mod, expected_class):
-            expected_class=getattr(py_mod,expected_class)
-        class_inst =expected_class(*args) 
+        try:
+            mod_name,file_ext = os.path.splitext(os.path.split(name)[-1])
+            if file_ext.lower() == '.py':
+                py_mod = imp.load_source(mod_name, name)
+            elif file_ext.lower() == '.pyc':
+                py_mod = imp.load_compiled(mod_name, name)
+            else:
+                py_mod=__import__(name)
+            if hasattr(py_mod, expected_class):
+                expected_class=getattr(py_mod,expected_class)
+                class_inst =expected_class(*args)
+        except:
+            pass
         return class_inst
     
