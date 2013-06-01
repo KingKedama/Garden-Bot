@@ -28,7 +28,7 @@ class CmdProcessor:
             if msg [1] == 'PRIVMSG' and msg[2] == self.nick:
                 if msg[3][:2] == ":!"  and msg[3][2:].lower() in self.commands:
                     if self.commands[msg[3][2:].lower()].pm:
-                        self.commands[msg[3][2:].lower()].run(msg[0],mess[mess.find(" :")+2:],getnick(msg[0]))
+                        self.commands[msg[3][2:].lower()].run(msg[0],mess[mess.find(" :")+2:],self.getnick(msg[0]))
             elif msg [1] == 'PRIVMSG' and msg[2] == self.channel:
                 self.countline(self.getnick(msg[0]),mess)
                 if msg[3][:2] == ":!"  and msg[3][2:].lower() in self.commands:
@@ -41,9 +41,11 @@ class CmdProcessor:
     
     def sendmsg(self,msg,target):
         self.outqueue.put((self.priority,'PRIVMSG '+target+' :'+msg))
+        self.countline(self.nick,'')
         self.priority+=1
     def sendaction(self,msg,target):
         self.outqueue.put((self.priority,'PRIVMSG '+target+' :\x01ACTION '+msg+'\x01'))
+        self.countline(self.nick,':\x01ACTION')
         self.priority+=1
         
     def getnick(self, hostnick):
