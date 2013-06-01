@@ -20,7 +20,8 @@ class CmdProcessor:
         self.add_command('snuggle','Snuggle')
         self.add_command('convoStarter','ConvoStarter')
         self.add_command('linecount','ShowLineCount')
-        
+        self.add_command('actioncount','ShowActionCount')
+        self.priority=1
         while 1:
             mess=self.inqueue.get()
             msg = string.split(mess)
@@ -38,10 +39,12 @@ class CmdProcessor:
             
             
     
-    def sendmsg(self,msg,target,priority=1000):
-        self.outqueue.put((priority,'PRIVMSG '+target+' :'+msg))
-    def sendaction(self,msg,target,priority=1000):
-        self.outqueue.put((priority,'PRIVMSG '+target+' :\x01ACTION '+msg+'\x01'))
+    def sendmsg(self,msg,target):
+        self.outqueue.put((self.priority,'PRIVMSG '+target+' :'+msg))
+        self.priority+=1
+    def sendaction(self,msg,target):
+        self.outqueue.put((self.priority,'PRIVMSG '+target+' :\x01ACTION '+msg+'\x01'))
+        self.priority+=1
         
     def getnick(self, hostnick):
         sendernickcolon = hostnick.split("!", 1)[0]

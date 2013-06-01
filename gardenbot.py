@@ -133,7 +133,7 @@ class GardenBot:
                         tmp = 'identify %s' % self.password
                         processor.sendmsg(tmp,'NickServ')
                     self.join(self.channel)
-                elif msg [1] == 'PRIVMSG':
+                else:
                     msgqueue.put(buffer)
             
     def irc_conn(self):
