@@ -24,5 +24,3 @@ class ShowActionCount(Command):
             self.cmdprocessor.sendmsg('%s has done %s action(s) so far.' % (self.cmdprocessor.getnick(sender),result[0]),target)
             conn.close()
 
-    def getname(self):
-        return "actioncount"

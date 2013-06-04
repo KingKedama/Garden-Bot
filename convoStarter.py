@@ -11,7 +11,6 @@ class ConvoStarter(Command):
             self.cmdprocessor.sendmsg('The server couldn\'t fulfill the request.  Error code: '+e.code,target)
         except urllib2.URLError, e:
             self.cmdprocessor.sendmsg('Failed to reach a server:  '+e.reason,target)
-    def getname(self):
-        return "convo"
+            
     def printhelp(self):
         return #TODO

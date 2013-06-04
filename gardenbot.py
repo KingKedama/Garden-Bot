@@ -44,8 +44,13 @@ class GardenBot:
                      messages INTEGER DEFAULT 0,
                      actions INTEGER DEFAULT 0,
                      PRIMARY KEY (id))''')
+        c.execute('''CREATE TABLE IF NOT EXISTS commands(
+                     name text,
+                     filename text,
+                     classname text,
+                     PRIMARY KEY (name))''')
         conn.commit()
-        
+        c.execute('''INSERT OR IGNORE INTO commands (name,filename,classname) VALUES("load","loadcommand.py","LoadCommand")''')
         if server:
             c.execute('''INSERT OR REPLACE INTO settings (key,value) VALUES("server",?)''',(server,))
             self.server=server

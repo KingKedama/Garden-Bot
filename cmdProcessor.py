@@ -17,11 +17,13 @@ class CmdProcessor:
     
     def run(self):
         self.commands={}
-        self.add_command('roll','DiceRoller')#TODO get commands to load from database
-        self.add_command('snuggle.py','Snuggle')
-        self.add_command('convoStarter.py','ConvoStarter')
-        self.add_command('linecount','ShowLineCount')
-        self.add_command('actioncount','ShowActionCount')
+        #self.add_command('loadcommand.py','LoadCommand','load')
+        self.load_from_database()
+        #self.add_command('roll','DiceRoller','roll')#TODO get commands to load from database
+        #self.add_command('snuggle.py','Snuggle','snuggle')
+        #self.add_command('convoStarter.py','ConvoStarter','convo')
+        #self.add_command('linecount','ShowLineCount','lincount')
+        #self.add_command('actioncount','ShowActionCount','actioncount')
         self.priority=1
         while 1:
             mess=self.inqueue.get()
@@ -68,10 +70,12 @@ class CmdProcessor:
         conn.commit()
         conn.close()
         
-    def add_command(self,filename,classname):
+    def add_command(self,filename,classname,name):
         c=self.load_class_from_file(filename,classname,(self,self.database))
         if c and isinstance(c,Command):
-            self.commands[c.getname()]=c
+            c.name=name
+            self.commands[name]=c
+        return c
     def load_class_from_file(self,name,expected_class,args):
         class_inst = None
         try:
@@ -88,4 +92,10 @@ class CmdProcessor:
         except:
             pass
         return class_inst
-    
+    def load_from_database(self):
+        conn= sqlite3.connect(self.database)
+        c=conn.cursor()
+        for row in c.execute('SELECT * FROM commands'):
+            self.add_command(row[1],row[2],row[0])
+        
+        

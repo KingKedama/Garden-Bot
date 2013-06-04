@@ -9,5 +9,3 @@ class Command:
         print 'this command not implimented'
     def printhelp(self):
         return
-    def getname(self):
-        return ""
