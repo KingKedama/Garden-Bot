@@ -123,24 +123,42 @@ class GardenBot:
         self.irc_conn()
         self.login(self.nick,password=self.password,realname=self.realname)
         
-        msgqueue=Queue.Queue()
+        self.msgqueue=Queue.Queue()
         
-        processor=CmdProcessor(msgqueue,self.outqueue,self)
+        processor=CmdProcessor(self.msgqueue,self.outqueue,self)
+        save=""
         while 1:
             buffer = self.s.recv(1024)
-            print buffer
-            msg = string.split(buffer)
-            if len(msg) >0:
-                if msg[0] == "PING": #check if server have sent ping command
-                    self.send_data("PONG %s" % msg[1],0) #answer with pong as per RFC 1459
-                if msg[1]=="NOTICE" and 'Found your hostname' in buffer:
-                    if self.password:
-                        tmp = 'identify %s' % self.password
-                        processor.sendmsg(tmp,'NickServ')
-                    self.join(self.channel)
-                else:
-                    msgqueue.put(buffer)
-            
+            if len(buffer.splitlines()) ==1 and save =="": 
+                self.process_input(buffer)
+            else:
+                if save != "":
+                    buffer=save+buffer
+                    save == ""
+                lines=buffer.splitlines(True)
+                for line in lines:
+                    msg=line.strip().split()
+                    if len(msg) >1 and not msg[1].isdigit():
+                        self.process_input(buffer)
+                    else:
+                        save+=line
+                        if " :End of /" in line:
+                            self.process_input(save)
+                            save= ""
+                
+    def process_input(self,buffer):
+        print buffer
+        msg = string.split(buffer)
+        if len(msg) >0:
+            if msg[0] == "PING": #check if server have sent ping command
+                self.send_data("PONG %s" % msg[1],0) #answer with pong as per RFC 1459
+            if msg[1]=="NOTICE" and 'Found your hostname' in buffer:
+                if self.password:
+                    tmp = 'identify %s' % self.password
+                    processor.sendmsg(tmp,'NickServ')
+                self.join(self.channel)
+            else:
+                self.msgqueue.put(buffer)
     def irc_conn(self):
         self.s.connect((self.server, self.port))
 

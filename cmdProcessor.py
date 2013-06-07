@@ -1,4 +1,4 @@
-import Queue,string,thread,sqlite3,os,imp
+import Queue,string,thread,sqlite3,os,imp,re
 from command import *
 
 class CmdProcessor:
@@ -17,26 +17,28 @@ class CmdProcessor:
     
     def run(self):
         self.commands={}
-        #self.add_command('loadcommand.py','LoadCommand','load')
         self.load_from_database()
-        #self.add_command('roll','DiceRoller','roll')#TODO get commands to load from database
-        #self.add_command('snuggle.py','Snuggle','snuggle')
-        #self.add_command('convoStarter.py','ConvoStarter','convo')
-        #self.add_command('linecount','ShowLineCount','lincount')
-        #self.add_command('actioncount','ShowActionCount','actioncount')
         self.priority=1
         while 1:
             mess=self.inqueue.get()
-            msg = string.split(mess)
-            if msg [1] == 'PRIVMSG' and msg[2] == self.nick:
-                if msg[3][:2] == ":!"  and msg[3][2:].lower() in self.commands:
-                    if self.commands[msg[3][2:].lower()].pm:
-                        self.commands[msg[3][2:].lower()].run(msg[0],mess[mess.find(" :")+2:],self.getnick(msg[0]))
-            elif msg [1] == 'PRIVMSG' and msg[2] == self.channel:
-                self.countline(self.getnick(msg[0]),mess)
-                if msg[3][:2] == ":!"  and msg[3][2:].lower() in self.commands:
-                    if self.commands[msg[3][2:].lower()].channel:
-                        self.commands[msg[3][2:].lower()].run(msg[0],mess[mess.find(" :")+2:],msg[2])
+            lines=mess.splitlines()
+            if len(lines) ==1:
+                msg = mess.split()
+                if msg [1] == 'PRIVMSG' and msg[2] == self.nick:
+                    if msg[3][:2] == ":!"  and msg[3][2:].lower() in self.commands:
+                        if self.commands[msg[3][2:].lower()].pm:
+                            self.commands[msg[3][2:].lower()].run(msg[0],mess[mess.find(" :")+2:],self.getnick(msg[0]))
+                elif msg [1] == 'PRIVMSG' and msg[2] == self.channel:
+                    self.countline(self.getnick(msg[0]),mess)
+                    if msg[3][:2] == ":!"  and msg[3][2:].lower() in self.commands:
+                        if self.commands[msg[3][2:].lower()].channel:
+                            self.commands[msg[3][2:].lower()].run(msg[0],mess[mess.find(" :")+2:],msg[2])
+            else:
+                if ":End of /NAMES list." in lines[-1]:
+                    for line in lines[:-1]:
+                        self.handle_names(line[line.find(" :")+1:])
+                elif ":End of /WHOIS list." in lines[-1]:
+                    pass
             self.inqueue.task_done()
             
             
@@ -98,4 +100,17 @@ class CmdProcessor:
         for row in c.execute('SELECT * FROM commands'):
             self.add_command(row[1],row[2],row[0])
         
+        
+    def handle_names(self, names):
+        names=names.split()
+        for name in names:
+            flag,name=self.split_name_and_flag(name)
+            self.outqueue.put((self.priority,'WHOIS '+name))
+    
+    def split_name_and_flag(self,name):
+        regex = re.compile('^([a-z])')
+        if regex.search(name.lower()) or name[0] in "_\[]{}^`|":
+            return "",name
+        else:
+            return name[0],name[1:]
         
