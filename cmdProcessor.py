@@ -19,6 +19,7 @@ class CmdProcessor:
         self.commands={}
         self.load_from_database()
         self.priority=1
+        self.whois={}  
         while 1:
             mess=self.inqueue.get()
             lines=mess.splitlines()
@@ -33,12 +34,20 @@ class CmdProcessor:
                     if msg[3][:2] == ":!"  and msg[3][2:].lower() in self.commands:
                         if self.commands[msg[3][2:].lower()].channel:
                             self.commands[msg[3][2:].lower()].run(msg[0],mess[mess.find(" :")+2:],msg[2])
+                elif msg[1] == 'NICK':
+                    oldnick= self.getnick(msg[0]).lower()
+                    if oldnick in self.whois:
+                        self.whois[msg[2][1:]]=self.whois[oldnick]
+                        del self.whois[oldnick]
             else:
                 if ":End of /NAMES list." in lines[-1]:
                     for line in lines[:-1]:
                         self.handle_names(line[line.find(" :")+1:])
                 elif ":End of /WHOIS list." in lines[-1]:
-                    pass
+                    for line in lines[:-1]:
+                        msg=line.split()
+                        if msg[1]=='330':
+                            self.whois[msg[3].lower()]=msg[4].lower()
             self.inqueue.task_done()
             
             
@@ -59,6 +68,9 @@ class CmdProcessor:
     def countline(self,nick,mess):
         column='messages'
         nick=nick.lower()
+        if nick.lower() in self.whois:
+            nick=self.whois[nick]
+        
         if ':\x01ACTION' in mess:
                 column='actions'
         conn= sqlite3.connect(self.database)
