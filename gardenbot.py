@@ -125,7 +125,7 @@ class GardenBot:
         
         self.msgqueue=Queue.Queue()
         
-        processor=CmdProcessor(self.msgqueue,self.outqueue,self)
+        self.processor=CmdProcessor(self.msgqueue,self.outqueue,self)
         save=""
         while 1:
             buffer = self.s.recv(1024)
@@ -155,7 +155,7 @@ class GardenBot:
             if msg[1]=="NOTICE" and 'Found your hostname' in buffer:
                 if self.password:
                     tmp = 'identify %s' % self.password
-                    processor.sendmsg(tmp,'NickServ')
+                    self.processor.sendmsg(tmp,'NickServ')
                 self.join(self.channel)
             else:
                 self.msgqueue.put(buffer)
