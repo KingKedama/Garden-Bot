@@ -122,13 +122,16 @@ class GardenBot:
         sender=SendProcessor(self.outqueue,self.s)
         self.irc_conn()
         self.login(self.nick,password=self.password,realname=self.realname)
-        
+        self.badnumbers=['332','333']
         self.msgqueue=Queue.Queue()
         
         self.processor=CmdProcessor(self.msgqueue,self.outqueue,self)
         save=""
+        self.count=0
         while 1:
             buffer = self.s.recv(1024)
+            self.line=0
+            self.count+=1
             if len(buffer.splitlines()) ==1 and save =="": 
                 self.process_input(buffer)
             else:
@@ -137,17 +140,24 @@ class GardenBot:
                     save == ""
                 lines=buffer.splitlines(True)
                 for line in lines:
+                    self.line+=1
                     msg=line.strip().split()
-                    if len(msg) >1 and not msg[1].isdigit():
-                        self.process_input(buffer)
+                    if len(msg) >1 and self.is_single_line(msg[1]):
+                        self.process_input(line.strip())
                     else:
                         save+=line
                         if " :End of /" in line:
                             self.process_input(save)
                             save= ""
-                
+    
+    def is_single_line(self,code):
+        if not code.isdigit():
+            return True
+        if code in self.badnumbers:
+            return True
+        return False
     def process_input(self,buffer):
-        print buffer
+        print '%d:%d %s'  % (self.count,self.line,buffer)
         msg = string.split(buffer)
         if len(msg) >0:
             if msg[0] == "PING": #check if server have sent ping command
