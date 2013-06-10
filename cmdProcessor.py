@@ -44,11 +44,11 @@ class CmdProcessor:
                 elif msg[1] == 'PART':
                     oldnick= self.getnick(msg[0]).lower()
                     if oldnick in self.whois:
-                        del whois[oldnick]
+                        del self.whois[oldnick]
                 elif msg[1] == 'QUIT':
                     oldnick= self.getnick(msg[0]).lower()
                     if oldnick in self.whois:
-                        del whois[oldnick]
+                        del self.whois[oldnick]
                     
             else:
                 if ":End of /NAMES list." in lines[-1]:
