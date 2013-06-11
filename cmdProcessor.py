@@ -101,8 +101,8 @@ class CmdProcessor:
     def add_command(self,filename,classname,name):
         c=self.load_class_from_file(filename,classname,(self,self.database))
         if c and isinstance(c,Command):
-            c.name=name
-            self.commands[name]=c
+            c.name=name.lower()
+            self.commands[name.lower()]=c
         return c
     def load_class_from_file(self,name,expected_class,args):
         class_inst = None

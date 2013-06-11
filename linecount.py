@@ -7,23 +7,27 @@ class ShowLineCount(Command):
     def run(self,sender,msg,target):
         parts = msg.split()
         if len(parts) == 2:
-            nick= parts[1].lower()
+            sender= parts[1]
+            nick=sender.lower()
+            if nick in self.cmdprocessor.whois:
+                nick=self.cmdprocessor.whois[nick]
             conn= sqlite3.connect(self.database)
             c=conn.cursor()
-            c.execute('SELECT SUM(messages) FROM users WHERE nick=? COLLATE nocase',(nick,))
+            c.execute('SELECT SUM(messages), SUM(actions) FROM users WHERE nick=? COLLATE nocase',(nick,))
             result= c.fetchone()
             conn.close()
             if result != None:
-                self.cmdprocessor.sendmsg('%s has sent %s lines so far.' % (nick,result[0]),target)
+                self.cmdprocessor.sendmsg('%s has sent %s lines and %s actions so far.' % (sender,result[0],result[1]),target)
             else:
-                self.cmdprocessor.sendmsg('%s has sent 0 lines so far.' % (nick),target)
+                self.cmdprocessor.sendmsg('%s has sent 0 lines so far.' % (sender),target)
         else:
             conn= sqlite3.connect(self.database)
             c=conn.cursor()
-            c.execute('SELECT SUM(messages) FROM users WHERE nick=? COLLATE nocase',(self.cmdprocessor.getnick(sender).lower(),))
+            sender=self.cmdprocessor.getnick(sender)
+            nick=sender.lower()
+            if nick in self.cmdprocessor.whois:
+                nick=self.cmdprocessor.whois[nick]
+            c.execute('SELECT SUM(messages), SUM(actions) FROM users WHERE nick=? COLLATE nocase',(nick,))
             result= c.fetchone()
-            self.cmdprocessor.sendmsg('%s has sent %s lines so far.' % (self.cmdprocessor.getnick(sender),result[0]),target)
+            self.cmdprocessor.sendmsg('%s has sent %s lines and %s actions so far.' % (sender,result[0],result[1]),target)
             conn.close()
-
-    def getname(self):
-        return "linecount"
