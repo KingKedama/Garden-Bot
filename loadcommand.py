@@ -3,7 +3,7 @@ import sqlite3
 
 class LoadCommand(Command):
 
-
+    admin=True
     def run(self,sender,msg,target):
         args=msg.split()
         if len(args) != 4:

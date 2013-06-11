@@ -27,12 +27,12 @@ class CmdProcessor:
                 msg = mess.split()
                 if msg [1] == 'PRIVMSG' and msg[2] == self.nick:
                     if msg[3][:2] == ":!"  and msg[3][2:].lower() in self.commands:
-                        if self.commands[msg[3][2:].lower()].pm:
+                        if self.commands[msg[3][2:].lower()].pm and self.permission(self.commands[msg[3][2:].lower()],self.getnick(msg[0])):
                             self.commands[msg[3][2:].lower()].run(msg[0],mess[mess.find(" :")+2:],self.getnick(msg[0]))
                 elif msg [1] == 'PRIVMSG' and msg[2] == self.channel:
                     self.countline(self.getnick(msg[0]),mess)
                     if msg[3][:2] == ":!"  and msg[3][2:].lower() in self.commands:
-                        if self.commands[msg[3][2:].lower()].channel:
+                        if self.commands[msg[3][2:].lower()].channel and self.permission(self.commands[msg[3][2:].lower()],self.getnick(msg[0])):
                             self.commands[msg[3][2:].lower()].run(msg[0],mess[mess.find(" :")+2:],msg[2])
                 elif msg[1] == 'NICK':
                     oldnick= self.getnick(msg[0]).lower()
@@ -71,6 +71,9 @@ class CmdProcessor:
     def sendaction(self,msg,target):
         self.outqueue.put((self.priority,'PRIVMSG '+target+' :\x01ACTION '+msg+'\x01'))
         self.countline(self.nick,':\x01ACTION')
+        self.priority+=1
+    def sendnotice(self,msg,target):
+        self.outqueue.put((self.priority,'NOTICE '+target+' :'+msg))
         self.priority+=1
         
     def getnick(self, hostnick):
@@ -122,6 +125,7 @@ class CmdProcessor:
         c=conn.cursor()
         for row in c.execute('SELECT * FROM commands'):
             self.add_command(row[1],row[2],row[0])
+        conn.close()
         
         
     def handle_names(self, names):
@@ -136,4 +140,21 @@ class CmdProcessor:
             return "",name
         else:
             return name[0],name[1:]
-        
+    def permission(self,command,nick):
+        if not command.admin:
+            return True
+        if not nick.lower() in self.whois:
+            self.sendnotice('permission denied: you are not authenticated',nick)
+            return False
+        conn= sqlite3.connect(self.database)
+        c=conn.cursor()
+        c.execute('SELECT is_admin FROM users WHERE nick=? collate nocase',(self.whois[nick.lower()],))
+        result=c.fetchone()
+        if result == None or not result[0]:
+            self.sendnotice('permission denied',nick)
+            conn.close()
+            return False
+        else:
+            conn.close()
+            return True
+            

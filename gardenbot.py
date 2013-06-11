@@ -4,7 +4,7 @@ from sendProcessor import *
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv,"hs:p:n:r:c:p:d:",["server=","port=","nick=","realname=","channel=","password=","database="])
+        opts, args = getopt.getopt(argv,"hs:p:n:r:c:p:d:a:",["server=","port=","nick=","realname=","channel=","password=","database=","admin="])
     except getopt.GetoptError:
         sys.exit(1) #TODO print syntax
     kwargs={}
@@ -25,11 +25,13 @@ def main(argv):
             kwargs['password']=arg
         elif opt in ("-d","--database"):
             kwargs['database']=arg
+        elif opt in ("-a","--admin"):
+            kwargs['admin']=arg
     bot= GardenBot(**kwargs)
     bot.start()
 class GardenBot:
 
-    def __init__(self,database='data.db',server=None,port=None,nick=None,realname=None,channel=None,password=None):
+    def __init__(self,database='data.db',server=None,port=None,nick=None,realname=None,channel=None,password=None,admin=None):
         self.s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         conn= sqlite3.connect(database)
         self.database=database
@@ -43,12 +45,15 @@ class GardenBot:
                      nick TEXT,
                      messages INTEGER DEFAULT 0,
                      actions INTEGER DEFAULT 0,
+                     is_admin INTEGER DEFAULT 0 NOT NULL,
                      PRIMARY KEY (id))''')
         c.execute('''CREATE TABLE IF NOT EXISTS commands(
                      name text,
                      filename text,
                      classname text,
                      PRIMARY KEY (name))''')
+        conn.commit()
+        c.execute('''CREATE UNIQUE INDEX IF NOT EXISTS remove_case ON users (nick COLLATE NOCASE)''')    
         conn.commit()
         c.execute('''INSERT OR IGNORE INTO commands (name,filename,classname) VALUES("load","loadcommand.py","LoadCommand")''')
         if server:
@@ -114,6 +119,11 @@ class GardenBot:
                 self.password=tmp[0]
             else:
                 self.password=None
+        if admin:
+            for name in admin.split():
+                c.execute('''INSERT OR REPLACE INTO users (nick,messages,actions,is_admin) VALUES(?,
+                             (SELECT messages FROM users WHERE nick=?),
+                             (SELECT actions FROM users WHERE nick=?),1)''',(name.lower(),name.lower(),name.lower()))
         conn.commit()
         conn.close()
         

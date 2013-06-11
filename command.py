@@ -2,6 +2,7 @@ class Command:
 
     channel=True
     pm=True
+    admin=False
     def __init__(self,cmdprocessor,database):
         self.cmdprocessor=cmdprocessor
         self.database=database
