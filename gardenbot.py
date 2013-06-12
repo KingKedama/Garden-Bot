@@ -3,6 +3,7 @@ from cmdProcessor import *
 from sendProcessor import *
 
 def main(argv):
+    print argv
     try:
         opts, args = getopt.getopt(argv,"hs:p:n:r:c:p:d:a:",["server=","port=","nick=","realname=","channel=","password=","database=","admin="])
     except getopt.GetoptError:

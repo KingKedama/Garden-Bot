@@ -62,7 +62,7 @@ class ReloadCommand(Command):
         command=c.fetchone()
         result=self.cmdprocessor.add_command(command[1],command[2],command[0])
         if not result:
-            self.cmdprocessor.sendmsg('failed to find class %s in %s' % (args[2],args[1]),target)
+            self.cmdprocessor.sendmsg('failed to find class %s in %s' % (command[2],command[1]),target)
             return
         if not isinstance(result,Command):
             self.cmdprocessor.sendmsg('%s is not a Command' %(args[2]),target)
