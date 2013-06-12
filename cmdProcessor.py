@@ -20,6 +20,7 @@ class CmdProcessor:
         self.load_from_database()
         self.priority=1
         self.whois={}  
+        self.lastnick=''
         while 1:
             mess=self.inqueue.get()
             lines=mess.splitlines()
@@ -92,7 +93,9 @@ class CmdProcessor:
         c.execute('SELECT * FROM users WHERE nick=?',(nick,))
         result= c.fetchone()
         if result:
-            c.execute('UPDATE users SET '+column +' = '+column+' + 1 WHERE nick=?',(nick,))
+            if self.lastnick != nick:
+                c.execute('UPDATE users SET '+column +' = '+column+' + 1 WHERE nick=?',(nick,))
+                self.lastnick = nick
         else:
             c.execute('INSERT INTO users (nick,'+column+') VALUES(?,1)',(nick,))     
         conn.commit()
