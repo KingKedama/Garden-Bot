@@ -140,7 +140,11 @@ class GardenBot:
         save=""
         self.count=0
         while 1:
-            buffer = self.s.recv(1024)
+            try:
+                buffer = self.s.recv(1024)
+            except Exception as e:
+                print e
+                sys.exit(0)
             self.line=0
             self.count+=1
             if len(buffer.splitlines()) ==1 and save =="": 

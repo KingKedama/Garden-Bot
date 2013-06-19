@@ -10,8 +10,8 @@ class CmdProcessor:
         self.database=bot.database
         self.nick=bot.nick
         self.channel=bot.channel
-        
-        thread.start_new(self.run,())
+        self.socket=bot.s
+        self.thread=thread.start_new(self.run,())
         
     
     

@@ -1,4 +1,4 @@
-import thread
+import thread,sys
 
 class SendProcessor:
 
@@ -6,7 +6,7 @@ class SendProcessor:
         
         self.outqueue=outqueue
         self.s=socket
-        thread.start_new(self.run,())
+        self.thread=thread.start_new(self.run,())
         
     
     
@@ -16,6 +16,8 @@ class SendProcessor:
             print 'sending: '+data
             self.send_data(data)
             self.outqueue.task_done()
+            if data=="QUIT rebooting":
+                sys.exit(0)
             
     def send_data(self,command):
         self.s.send(command + '\n')
