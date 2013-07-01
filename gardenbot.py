@@ -19,7 +19,7 @@ def main(argv):
         elif opt in ("-n","--nick"):
             kwargs['nick']=arg
         elif opt in ("-r","--realname"):
-            kwargs['server']=arg
+            kwargs['realname']=arg
         elif opt in ("-c","--channel"):
             kwargs['channel']=arg
         elif opt in ("-p","--password"):
@@ -70,12 +70,12 @@ class GardenBot:
                 sys.exit(1)
         if port:
             c.execute('''INSERT OR REPLACE INTO settings (key,value) VALUES("port",?)''',(port,))
-            self.server=server
+            self.port=int(port)
         else:
             c.execute('SELECT value FROM settings WHERE key="port"')
             tmp= c.fetchone()
             if tmp:
-                self.port=tmp[0]
+                self.port=int(tmp[0])
             else:
                 self.port=6667
         if nick:
