@@ -11,6 +11,7 @@ class CmdProcessor:
         self.nick=bot.nick
         self.channel=bot.channel
         self.socket=bot.s
+        self.priority=1
         self.thread=thread.start_new(self.run,())
         
     
@@ -18,7 +19,6 @@ class CmdProcessor:
     def run(self):
         self.commands={}
         self.load_from_database()
-        self.priority=1
         self.whois={}  
         self.lastnick=''
         while 1:
@@ -31,10 +31,11 @@ class CmdProcessor:
                         if self.commands[msg[3][2:].lower()].pm and self.permission(self.commands[msg[3][2:].lower()],self.getnick(msg[0])):
                             self.commands[msg[3][2:].lower()].execute(msg[0],mess[mess.find(" :")+2:],self.getnick(msg[0]))
                 elif msg [1] == 'PRIVMSG' and msg[2] == self.channel:
-                    self.countline(self.getnick(msg[0]),mess)
                     if msg[3][:2] == ":!"  and msg[3][2:].lower() in self.commands:
                         if self.commands[msg[3][2:].lower()].channel and self.permission(self.commands[msg[3][2:].lower()],self.getnick(msg[0])):
                             self.commands[msg[3][2:].lower()].execute(msg[0],mess[mess.find(" :")+2:],msg[2])
+                    else:
+                        self.countline(self.getnick(msg[0]),mess)
                 elif msg[1] == 'NICK':
                     oldnick= self.getnick(msg[0]).lower()
                     if oldnick in self.whois:
@@ -80,9 +81,10 @@ class CmdProcessor:
     def getnick(self, hostnick):
         sendernickcolon = hostnick.split("!", 1)[0]
         return sendernickcolon.strip(':')
-    def countline(self,nick,mess):
+    def countline(self,sender,mess):
         column='messages'
-        nick=nick.lower()
+        nick=sender.lower()
+       
         if nick.lower() in self.whois:
             nick=self.whois[nick]
         
@@ -94,10 +96,10 @@ class CmdProcessor:
         result= c.fetchone()
         if result:
             if self.lastnick != nick:
-                c.execute('UPDATE users SET '+column +' = '+column+' + 1 WHERE nick=?',(nick,))
+                c.execute('UPDATE users SET '+column +' = '+column+' + 1,last_said=?,last_time=datetime("now") WHERE nick=?',('<'+sender+'>: '+mess[mess.find(" :")+2:].strip(),nick))
                 self.lastnick = nick
         else:
-            c.execute('INSERT INTO users (nick,'+column+') VALUES(?,1)',(nick,))     
+            c.execute('INSERT INTO users (nick,'+column+',last_said,last_time) VALUES(?,1,?,datetime("now"))',(nick,'<'+sender+'>: '+mess[mess.find(" :")+2:].strip()))     
         conn.commit()
         conn.close()
         

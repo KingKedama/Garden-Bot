@@ -44,9 +44,12 @@ class GardenBot:
         c.execute('''CREATE TABLE IF NOT EXISTS users(
                      id INTEGER,
                      nick TEXT,
-                     messages INTEGER DEFAULT 0,
-                     actions INTEGER DEFAULT 0,
+                     messages INTEGER DEFAULT 0 NOT NULL,
+                     actions INTEGER DEFAULT 0 NOT NULL,
                      is_admin INTEGER DEFAULT 0 NOT NULL,
+                     last_said Text,
+                     last_time Text,
+                     joined Text,
                      PRIMARY KEY (id))''')
         c.execute('''CREATE TABLE IF NOT EXISTS commands(
                      name text,
@@ -122,9 +125,12 @@ class GardenBot:
                 self.password=None
         if admin:
             for name in admin.split():
-                c.execute('''INSERT OR REPLACE INTO users (nick,messages,actions,is_admin) VALUES(?,
+                c.execute('''INSERT OR REPLACE INTO users (nick,messages,actions,is_admin,last_said,last_time,joined) VALUES(?,
                              (SELECT messages FROM users WHERE nick=?),
-                             (SELECT actions FROM users WHERE nick=?),1)''',(name.lower(),name.lower(),name.lower()))
+                             (SELECT actions FROM users WHERE nick=?),1,
+                            (SELECT last_said FROM users WHERE nick=?),
+                            (SELECT last_time FROM users WHERE nick=?),
+                            (SELECT joined FROM users WHERE nick=?))''',(name.lower(),name.lower(),name.lower(),name.lower(),name.lower(),name.lower()))
         conn.commit()
         conn.close()
         
