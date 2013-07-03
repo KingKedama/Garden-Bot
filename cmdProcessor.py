@@ -68,7 +68,7 @@ class CmdProcessor:
     
     def sendmsg(self,msg,target):
         self.outqueue.put((self.priority,'PRIVMSG '+target+' :'+msg))
-        self.countline(self.nick,'')
+        self.countline(self.nick,msg)
         self.priority+=1
     def sendaction(self,msg,target):
         self.outqueue.put((self.priority,'PRIVMSG '+target+' :\x01ACTION '+msg+'\x01'))
@@ -98,6 +98,9 @@ class CmdProcessor:
             if self.lastnick != nick:
                 c.execute('UPDATE users SET '+column +' = '+column+' + 1,last_said=?,last_time=datetime("now") WHERE nick=?',('<'+sender+'>: '+mess[mess.find(" :")+2:].strip(),nick))
                 self.lastnick = nick
+            else:
+                c.execute('UPDATE users SET last_said=?,last_time=datetime("now") WHERE nick=?',('<'+sender+'>: '+mess[mess.find(" :")+2:].strip(),nick))
+                
         else:
             c.execute('INSERT INTO users (nick,'+column+',last_said,last_time) VALUES(?,1,?,datetime("now"))',(nick,'<'+sender+'>: '+mess[mess.find(" :")+2:].strip()))     
         conn.commit()
