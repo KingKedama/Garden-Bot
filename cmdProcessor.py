@@ -41,7 +41,7 @@ class CmdProcessor:
                 elif msg[1] == 'NICK':
                     oldnick= self.getnick(msg[0]).lower()
                     if oldnick in self.whois:
-                        self.whois[msg[2][1:]][0]=self.whois[oldnick]
+                        self.whois[msg[2][1:]]=self.whois[oldnick]
                         del self.whois[oldnick]
                 elif msg[1] == 'JOIN':
                     self.handle_names(self.getnick(msg[0]),msg[2])
@@ -112,8 +112,8 @@ class CmdProcessor:
             c.execute('SELECT user_id FROM users WHERE nick=?',(nick,))
             id=c.fetchone()[0]
         c.execute('''INSERT OR REPLACE INTO user_data (user_id,channel,messages,actions,last_said,last_time) VALUES(?,?,
-                             (SELECT messages FROM user_data WHERE user_id=? and channel=?)+?,
-                             (SELECT actions FROM users WHERE user_id=? and channel=?)+?,
+                             (SELECT SUM(messages) FROM user_data WHERE user_id=? and channel=?)+?,
+                             (SELECT SUM(actions) FROM user_data WHERE user_id=? and channel=?)+?,
                             ?,
                             datetime("now"))''',(id,channel,id,channel,messages,id,channel,actions,'<'+sender+'>: '+mess[mess.find(" :")+2:].strip()))
         conn.commit()
