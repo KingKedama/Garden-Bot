@@ -42,20 +42,28 @@ class GardenBot:
                      value text,
                      PRIMARY KEY (key))''')
         c.execute('''CREATE TABLE IF NOT EXISTS users(
-                     id INTEGER,
+                     user_id INTEGER,
                      nick TEXT,
-                     messages INTEGER DEFAULT 0 NOT NULL,
-                     actions INTEGER DEFAULT 0 NOT NULL,
                      is_admin INTEGER DEFAULT 0 NOT NULL,
-                     last_said Text,
-                     last_time Text,
                      joined Text,
-                     PRIMARY KEY (id))''')
+                     PRIMARY KEY (user_id))''')
         c.execute('''CREATE TABLE IF NOT EXISTS commands(
                      name text,
                      filename text,
                      classname text,
                      PRIMARY KEY (name))''')
+        c.execute('''CREATE TABLE IF NOT EXISTS channels(
+                     channel text,
+                     PRIMARY KEY(channel)
+                    )''')
+        c.execute('''CREATE TABLE IF NOT EXISTS user_data(
+                     user_id INTEGER,
+                     channel text,
+                     messages INTEGER DEFAULT 0 NOT NULL,
+                     actions INTEGER DEFAULT 0 NOT NULL,
+                     last_said Text,
+                     last_time Text,
+                     PRIMARY KEY(user_id,channel))  ''')
         conn.commit()
         c.execute('''CREATE UNIQUE INDEX IF NOT EXISTS remove_case ON users (nick COLLATE NOCASE)''')    
         conn.commit()
@@ -102,17 +110,19 @@ class GardenBot:
                 self.realname=tmp[0]
             else:
                 self.realname='gardenbot'
-        if channel:
-            c.execute('''INSERT OR REPLACE INTO settings (key,value) VALUES("channel",?)''',(channel,))
-            self.channel=channel
-        else:
-            c.execute('SELECT value FROM settings WHERE key="channel"')
-            tmp= c.fetchone()
-            if tmp:
-                self.channel=tmp[0]
-            else:
-                print 'No channel specified'
-                sys.exit(1)
+        self.channel=list()
+        if channel:    
+            for chan in channel.split():
+                c.execute('''INSERT OR IGNORE INTO channels (channel) VALUES(?)''',(chan,))
+                self.channel.append(chan)
+        c.execute('SELECT * FROM channels')
+        tmp= c.fetchall()
+        for chan in tmp:
+            if not chan[0] in self.channel:
+                self.channel.append(chan[0])
+        if not self.channel:
+            print 'No channel specified'
+            sys.exit(1)
         if password:
             c.execute('''INSERT OR REPLACE INTO settings (key,value) VALUES("password",?)''',(password,))
             self.password=password
@@ -125,12 +135,12 @@ class GardenBot:
                 self.password=None
         if admin:
             for name in admin.split():
-                c.execute('''INSERT OR REPLACE INTO users (nick,messages,actions,is_admin,last_said,last_time,joined) VALUES(?,
-                             (SELECT messages FROM users WHERE nick=?),
-                             (SELECT actions FROM users WHERE nick=?),1,
-                            (SELECT last_said FROM users WHERE nick=?),
-                            (SELECT last_time FROM users WHERE nick=?),
-                            (SELECT joined FROM users WHERE nick=?))''',(name.lower(),name.lower(),name.lower(),name.lower(),name.lower(),name.lower()))
+                name=name.lower()
+                c.execute('''SELECT * FROM users WHERE nick=?''',(name,))
+                if c.fetchone():
+                    c.execute('''UPDATE users SET is_admin=1 WHERE nick=?''',(name,))
+                else:
+                    c.execute('''INSERT INTO users (nick,is_admin) VALUES(?,1)''',(name,))
         conn.commit()
         conn.close()
         
@@ -178,7 +188,7 @@ class GardenBot:
             return True
         return False
     def process_input(self,buffer):
-        print '%d:%d %s'  % (self.count,self.line,buffer)
+        #print '%d:%d %s'  % (self.count,self.line,buffer)
         msg = string.split(buffer)
         if len(msg) >0:
             if msg[0] == "PING": #check if server have sent ping command
@@ -187,7 +197,8 @@ class GardenBot:
                 if self.password:
                     tmp = 'identify %s' % self.password
                     self.processor.sendmsg(tmp,'NickServ')
-                self.join(self.channel)
+                for chan in self.channel:
+                    self.join(chan)
             else:
                 self.msgqueue.put(buffer)
     def irc_conn(self):
