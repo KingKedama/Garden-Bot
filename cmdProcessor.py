@@ -74,11 +74,11 @@ class CmdProcessor:
     
     def sendmsg(self,msg,target):
         self.outqueue.put((self.priority,'PRIVMSG '+target+' :'+msg))
-        self.countline(self.nick,msg,None)
+        #self.countline(self.nick,msg,None) is borked
         self.priority+=1
     def sendaction(self,msg,target):
         self.outqueue.put((self.priority,'PRIVMSG '+target+' :\x01ACTION '+msg+'\x01'))
-        self.countline(self.nick,':\x01ACTION',None)
+        #self.countline(self.nick,':\x01ACTION',None) is borked
         self.priority+=1
     def sendnotice(self,msg,target):
         self.outqueue.put((self.priority,'NOTICE '+target+' :'+msg))
@@ -87,7 +87,7 @@ class CmdProcessor:
     def getnick(self, hostnick):
         sendernickcolon = hostnick.split("!", 1)[0]
         return sendernickcolon.strip(':')
-    def countline(self,sender,mess,channel):
+    def countline(self,sender,mess,channel): #expects a str and not unicode
         
         nick=sender.lower()
        
@@ -111,11 +111,12 @@ class CmdProcessor:
             conn.commit()
             c.execute('SELECT user_id FROM users WHERE nick=?',(nick,))
             id=c.fetchone()[0]
+        
         c.execute('''INSERT OR REPLACE INTO user_data (user_id,channel,messages,actions,last_said,last_time) VALUES(?,?,
                              (SELECT SUM(messages) FROM user_data WHERE user_id=? and channel=?)+?,
                              (SELECT SUM(actions) FROM user_data WHERE user_id=? and channel=?)+?,
                             ?,
-                            datetime("now"))''',(id,channel,id,channel,messages,id,channel,actions,'<'+sender+'>: '+mess[mess.find(" :")+2:].strip()))
+                            datetime("now"))''',(id,channel,id,channel,messages,id,channel,actions,('<'+sender+'>: '+mess[mess.find(" :")+2:].strip()).decode("utf-8",'replace')))
         conn.commit()
         conn.close()
         

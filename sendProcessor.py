@@ -23,5 +23,7 @@ class SendProcessor:
             if not count % 10:
                 time.sleep(1)
             
-    def send_data(self,command):
-        self.s.send(command + '\n')
+    def send_data(self,data):
+        if type(data) is unicode:
+            data= data.encode('utf-8','replace')
+        self.s.send(data + '\n')
