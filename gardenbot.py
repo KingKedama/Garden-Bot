@@ -1,9 +1,9 @@
-import socket,string,sys,sqlite3,getopt,Queue
+import socket,string,sys,sqlite3,getopt,queue
 from cmdProcessor import * 
 from sendProcessor import *
 
 def main(argv):
-    print argv
+    print(argv)
     try:
         opts, args = getopt.getopt(argv,"hs:p:n:r:c:p:d:a:",["server=","port=","nick=","realname=","channel=","password=","database=","admin="])
     except getopt.GetoptError:
@@ -77,7 +77,7 @@ class GardenBot:
             if tmp:
                 self.server=tmp[0]
             else:
-                print 'No server specified'
+                print('No server specified')
                 sys.exit(1)
         if port:
             c.execute('''INSERT OR REPLACE INTO settings (key,value) VALUES("port",?)''',(port,))
@@ -98,7 +98,7 @@ class GardenBot:
             if tmp:
                 self.nick=tmp[0]
             else:
-                print 'No nick specified'
+                print('No nick specified')
                 sys.exit(1)
         if realname:
             c.execute('''INSERT OR REPLACE INTO settings (key,value) VALUES("realname",?)''',(realname,))
@@ -121,7 +121,7 @@ class GardenBot:
             if not chan[0] in self.channel:
                 self.channel.append(chan[0])
         if not self.channel:
-            print 'No channel specified'
+            print('No channel specified')
             sys.exit(1)
         if password:
             c.execute('''INSERT OR REPLACE INTO settings (key,value) VALUES("password",?)''',(password,))
@@ -145,12 +145,12 @@ class GardenBot:
         conn.close()
         
     def start(self):
-        self.outqueue=Queue.PriorityQueue()
+        self.outqueue=queue.PriorityQueue()
         sender=SendProcessor(self.outqueue,self.s)
         self.irc_conn()
         self.login(self.nick,password=self.password,realname=self.realname)
         self.badnumbers=['332','333']
-        self.msgqueue=Queue.Queue()
+        self.msgqueue=queue.Queue()
         
         self.processor=CmdProcessor(self.msgqueue,self.outqueue,self)
         save=""
@@ -158,8 +158,9 @@ class GardenBot:
         while 1:
             try:
                 buffer = self.s.recv(1024)
+                buffer = buffer.decode('utf-8','replace')
             except Exception as e:
-                print e
+                print(e)
                 sys.exit(0)
             self.line=0
             self.count+=1
@@ -189,7 +190,7 @@ class GardenBot:
         return False
     def process_input(self,buffer):
         #print '%d:%d %s'  % (self.count,self.line,buffer)
-        msg = string.split(buffer)
+        msg = buffer.split()
         if len(msg) >0:
             if msg[0] == "PING": #check if server have sent ping command
                 self.send_data("PONG %s" % msg[1],0) #answer with pong as per RFC 1459

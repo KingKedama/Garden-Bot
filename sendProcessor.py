@@ -1,4 +1,4 @@
-import thread,sys,time
+import _thread,sys,time
 
 class SendProcessor:
 
@@ -6,7 +6,7 @@ class SendProcessor:
         
         self.outqueue=outqueue
         self.s=socket
-        self.thread=thread.start_new(self.run,())
+        self.thread=_thread.start_new(self.run,())
         
     
     
@@ -24,6 +24,6 @@ class SendProcessor:
             time.sleep(1)
             
     def send_data(self,data):
-        if type(data) is unicode:
+        if type(data) is str:
             data= data.encode('utf-8','replace')
-        self.s.send(data + '\n')
+        self.s.send(data + b'\n')

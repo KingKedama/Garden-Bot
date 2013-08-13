@@ -1,4 +1,4 @@
-import Queue,string,thread,sqlite3,os,imp,re
+import queue,string,_thread,sqlite3,os,imp,re
 from command import *
 
 class CmdProcessor:
@@ -10,12 +10,12 @@ class CmdProcessor:
         self.database=bot.database
         self.nick=bot.nick
         self.channel=bot.channel
-        print self.channel
+        print(self.channel)
         self.socket=bot.s
         self.priority=1
         self.whois={}
         self.lastnick=''
-        self.thread=thread.start_new(self.run,())
+        self.thread=_thread.start_new(self.run,())
         
     
     
@@ -116,7 +116,7 @@ class CmdProcessor:
                              (SELECT SUM(messages) FROM user_data WHERE user_id=? and channel=?)+?,
                              (SELECT SUM(actions) FROM user_data WHERE user_id=? and channel=?)+?,
                             ?,
-                            datetime("now"))''',(id,channel,id,channel,messages,id,channel,actions,('<'+sender+'>: '+mess[mess.find(" :")+2:].strip()).decode("utf-8",'replace')))
+                            datetime("now"))''',(id,channel,id,channel,messages,id,channel,actions,('<'+sender+'>: '+mess[mess.find(" :")+2:].strip())))
         conn.commit()
         conn.close()
         

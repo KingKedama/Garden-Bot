@@ -1,4 +1,4 @@
-import socket,string,random,urllib2
+import socket,string,random,urllib.request,urllib.error,urllib.parse
 
 SERVER='leguin.freenode.net' #The server we want to connect to 
 PORT=6667 #The connection port which is usually 6667 
@@ -57,13 +57,13 @@ def roll(sender,msg,target):
 
 def convostarter(sender,msg,target):
     try:
-        req=urllib2.Request('http://en.wikipedia.org/wiki/Special:Random')
+        req=urllib.request.Request('http://en.wikipedia.org/wiki/Special:Random')
         req.add_header('User-Agent',"Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11")
-        res=urllib2.urlopen(req)
+        res=urllib.request.urlopen(req)
         sendmsg('What do you think of '+res.geturl()+' ?',target)
-    except urllib2.HTTPError, e:
+    except urllib.error.HTTPError as e:
         sendmsg('The server couldn\'t fulfill the request.  Error code: '+e.code,target)
-    except urllib2.URLError, e:
+    except urllib.error.URLError as e:
         sendmsg('Failed to reach a server:  '+e.reason,target)
 		
 def snuggles(sender,msg,target):
@@ -103,7 +103,7 @@ while 1:
             input = buffer[buffer.find(" :")+2:]
             commands[msg[3].lower()](msg[0],input,msg[2])
     else:
-        print buffer
+        print(buffer)
 		
 		
 
