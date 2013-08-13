@@ -20,8 +20,8 @@ class SendProcessor:
             self.outqueue.task_done()
             if data=="QUIT rebooting":
                 sys.exit(0)
-            if not count % 10:
-                time.sleep(1)
+            
+            time.sleep(1)
             
     def send_data(self,data):
         if type(data) is unicode:

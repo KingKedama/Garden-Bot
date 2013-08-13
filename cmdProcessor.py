@@ -64,7 +64,7 @@ class CmdProcessor:
                 elif ":End of /WHOIS list." in lines[-1]:
                     for line in lines[:-1]:
                         msg=line.split()
-                        if msg[1]=='330':
+                        if len(msg) > 1 and msg[1]=='330':
                             self.whois[msg[3].lower()][0]=msg[4].lower()
                             self.whois[msg[3].lower()][1]=1
             self.inqueue.task_done()
