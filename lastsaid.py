@@ -17,7 +17,7 @@ class LastSaid(Command):
         c.execute('Select user_id FROM users WHERE nick=?',(nick,))
         result= c.fetchone()
         if not result:
-            self.cmdprocessor.sendmsg('%s is not in the database.' % (sender),target)
+            self.cmdprocessor.sendmsg('%s is not in the database.' % (nick),target)
             return
         c.execute('Select last_said,last_time FROM user_data WHERE user_id=? and channel=?',(result[0],target))
         result=c.fetchone()
