@@ -236,7 +236,7 @@ class GardenBot:
         self.send_data("NICK " + nick,1)
         
     def bnclogin(self,userpwd):
-        self.send_data("PASS %s",0)
+        self.send_data("PASS %s" % (userpwd),0)
         
 
 if __name__ == "__main__":
