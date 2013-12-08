@@ -5,7 +5,7 @@ from sendProcessor import *
 def main(argv):
     print(argv)
     try:
-        opts, args = getopt.getopt(argv,"hs:p:n:r:c:p:d:a:",["server=","port=","nick=","realname=","channel=","password=","database=","admin="])
+        opts, args = getopt.getopt(argv,"b:hs:p:n:r:c:w:d:a:",["bnc=","server=","port=","nick=","realname=","channel=","password=","database=","admin="])
     except getopt.GetoptError:
         sys.exit(1) #TODO print syntax
     kwargs={}
@@ -22,17 +22,21 @@ def main(argv):
             kwargs['realname']=arg
         elif opt in ("-c","--channel"):
             kwargs['channel']=arg
-        elif opt in ("-p","--password"):
+        elif opt in ("-w","--password"):
             kwargs['password']=arg
         elif opt in ("-d","--database"):
             kwargs['database']=arg
         elif opt in ("-a","--admin"):
             kwargs['admin']=arg
+        elif opt in ("-b","--bnc"):
+            kwargs['bnc']=arg  #1 if a bnc is being used,0 or not given otherwise
+        
+            
     bot= GardenBot(**kwargs)
     bot.start()
 class GardenBot:
 
-    def __init__(self,database='data.db',server=None,port=None,nick=None,realname=None,channel=None,password=None,admin=None):
+    def __init__(self,database='data.db',server=None,port=None,nick=None,realname=None,channel=None,password=None,admin=None,bnc=None):
         self.s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         conn= sqlite3.connect(database)
         self.database=database
@@ -89,6 +93,16 @@ class GardenBot:
                 self.port=int(tmp[0])
             else:
                 self.port=6667
+        if bnc:
+            c.execute('''INSERT OR REPLACE INTO settings (key,value) VALUES("bnc",?)''',(bnc,))
+            self.bnc=int(bnc)
+        else:
+            c.execute('SELECT value FROM settings WHERE key="bnc"')
+            tmp= c.fetchone()
+            if tmp:
+                self.bnc=int(tmp[0])
+            else:
+                self.bnc=0
         if nick:
             c.execute('''INSERT OR REPLACE INTO settings (key,value) VALUES("nick",?)''',(nick,))
             self.nick=nick
@@ -148,7 +162,10 @@ class GardenBot:
         self.outqueue=queue.PriorityQueue()
         sender=SendProcessor(self.outqueue,self.s)
         self.irc_conn()
-        self.login(self.nick,password=self.password,realname=self.realname)
+        if self.bnc:
+            self.bnclogin(self.password)
+        else:
+            self.login(self.nick,password=self.password,realname=self.realname)
         self.badnumbers=['332','333']
         self.msgqueue=queue.Queue()
         
@@ -217,6 +234,9 @@ class GardenBot:
     def login(self,nick, username='gardenbot', password = None, realname='gardenbot', hostname='testhostname', servername='whatevenisthis'):
         self.send_data("USER %s %s %s %s" % (username, hostname, servername, realname),0)
         self.send_data("NICK " + nick,1)
+        
+    def bnclogin(self,userpwd):
+        self.send_data("PASS %s",0)
         
 
 if __name__ == "__main__":
