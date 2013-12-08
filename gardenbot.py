@@ -163,9 +163,11 @@ class GardenBot:
         sender=SendProcessor(self.outqueue,self.s)
         self.irc_conn()
         if self.bnc:
+            self.login(self.nick,realname=self.realname)
             self.bnclogin(self.password)
         else:
             self.login(self.nick,password=self.password,realname=self.realname)
+            
         self.badnumbers=['332','333']
         self.msgqueue=queue.Queue()
         
