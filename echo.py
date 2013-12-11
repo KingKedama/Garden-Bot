@@ -1,6 +1,6 @@
 from command import *
 
-class Echo(command):
+class Echo(Command):
 
     admin=true
     def run(self,sender,msg,target):
