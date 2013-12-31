@@ -2,10 +2,11 @@ import _thread,sys,time
 
 class SendProcessor:
 
-    def __init__(self,outqueue,socket):
+    def __init__(self,outqueue,socket,verbose):
         
         self.outqueue=outqueue
         self.s=socket
+        self.verbose=verbose
         self.thread=_thread.start_new(self.run,())
         
     
@@ -15,7 +16,8 @@ class SendProcessor:
         while 1:
             data=self.outqueue.get()[1]
             count+=1
-            #print 'sending: '+data
+            if self.verbose:
+                print( 'sending: '+data)
             self.send_data(data)
             self.outqueue.task_done()
             if data=="QUIT rebooting":

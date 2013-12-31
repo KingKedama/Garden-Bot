@@ -5,7 +5,7 @@ from sendProcessor import *
 def main(argv):
     print(argv)
     try:
-        opts, args = getopt.getopt(argv,"b:hs:p:n:r:c:w:d:a:",["bnc=","server=","port=","nick=","realname=","channel=","password=","database=","admin="])
+        opts, args = getopt.getopt(argv,"b:hs:p:n:r:c:w:d:a:v",["bnc=","server=","port=","nick=","realname=","channel=","password=","database=","admin=","verbose"])
     except getopt.GetoptError:
         sys.exit(1) #TODO print syntax
     kwargs={}
@@ -30,13 +30,15 @@ def main(argv):
             kwargs['admin']=arg
         elif opt in ("-b","--bnc"):
             kwargs['bnc']=arg  #1 if a bnc is being used,0 or not given otherwise
+        elif opt in ("-v","--verbose"):
+            kwargs['verbose']=True
         
             
     bot= GardenBot(**kwargs)
     bot.start()
 class GardenBot:
 
-    def __init__(self,database='data.db',server=None,port=None,nick=None,realname=None,channel=None,password=None,admin=None,bnc=None):
+    def __init__(self,database='data.db',server=None,port=None,nick=None,realname=None,channel=None,password=None,admin=None,bnc=None,verbose=None):
         self.s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         conn= sqlite3.connect(database)
         self.database=database
@@ -157,10 +159,12 @@ class GardenBot:
                     c.execute('''INSERT INTO users (nick,is_admin) VALUES(?,1)''',(name,))
         conn.commit()
         conn.close()
+        if verbose:
+            self.verbose=True
         
     def start(self):
         self.outqueue=queue.PriorityQueue()
-        sender=SendProcessor(self.outqueue,self.s)
+        sender=SendProcessor(self.outqueue,self.s,self.verbose)
         self.irc_conn()
         if self.bnc:
             self.login(self.nick,realname=self.realname)
@@ -208,7 +212,8 @@ class GardenBot:
             return True
         return False
     def process_input(self,buffer):
-        #print '%d:%d %s'  % (self.count,self.line,buffer)
+        if self.verbose:
+            print( '%d:%d %s'  % (self.count,self.line,buffer))
         msg = buffer.split()
         if len(msg) >0:
             if msg[0] == "PING": #check if server have sent ping command
